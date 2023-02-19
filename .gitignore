@@ -2,7 +2,7 @@
 target/
 *.lock
 input.txt
-
+.idea/
 
 # Default ignored files
 /shelf/
