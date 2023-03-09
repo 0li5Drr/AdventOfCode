@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use std::fs::File;
 use camino::Utf8PathBuf;
 
 /* First thoughts are to break into 3 Steps:
@@ -49,26 +50,18 @@ fn parse_entry(i : &str) -> Entry {
         return Entry::Dir(Utf8PathBuf::from(v))
     }
     let (size, path) = i.split_once(" ").unwrap(); //Entry will always have a space
-    let size : u64 = size.parse().unwrap();
+    let size : u64 = size.trim().parse().unwrap();
     let path = Utf8PathBuf::from(path);
     Entry::File(size, path)
 }
 
-fn parse_line(i : &str) -> Option<InputLine> {
-
-    match i.strip_prefix("$") {
-        Some(c) => {
-            if let Some(cmd) = parse_cmd(c) {
-                return Some(cmd);
-            }
-        }
-        None => {
-            if let Some(e) = parse_entry(i) {
-                return Some(e)
-            }
+fn parse_line(i : &str) -> InputLine {
+    if let Some(c) = i.strip_prefix("$") {
+        if let Some(cmd) = parse_cmd(c) {
+            return InputLine::Command(cmd);
         }
     }
-    None
+    InputLine::Entry(parse_entry(i))
 }
 
 #[derive()]
@@ -84,6 +77,16 @@ struct FileNode {
     children : HashMap<Utf8PathBuf, FileNode>
 }
 
+// Now that Structs and Enums are sorted, will take a breadcrumb stack approach to paths?
+
 fn main() {
-    println!("Hello, world!");
+    let mut pwd = Utf8PathBuf::from("/");
+    let root :FileNode = FileNode { size: 0, children: HashMap::new() };
+    let lines : Vec<&str> = include_str!("input.txt").lines().collect();
+    for line in lines {
+        match parse_line(line) {
+            InputLine::Command(c) => {todo!()},
+            InputLine::Entry(e) => {todo!()}
+        }
+    }
 }
