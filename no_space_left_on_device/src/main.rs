@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -81,12 +82,38 @@ struct FileNode {
 
 fn main() {
     let mut pwd = Utf8PathBuf::from("/");
-    let root :FileNode = FileNode { size: 0, children: HashMap::new() };
+    let mut root :FileNode = FileNode { size: 0, children: HashMap::new() };
+    let mut breadcrumbs: Vec<&mut FileNode> = vec![&mut root]; //Last is always current FileNode
+
+    //This is where initialise the dummy system by parsing all lines.
     let lines : Vec<&str> = include_str!("input.txt").lines().collect();
     for line in lines {
         match parse_line(line) {
-            InputLine::Command(c) => {todo!()},
-            InputLine::Entry(e) => {todo!()}
+            InputLine::Command(c) => {
+                match c {
+                    Command::Cd(cd) => {
+                        if cd.0.eq("..") {
+                            breadcrumbs.pop();
+                        } else {
+                            pwd = pwd.join(&cd.0);
+                            let current = breadcrumbs.last().unwrap();
+                            let child = current.children.get_mut(&cd.0).unwrap();
+                            breadcrumbs.push(child);
+                        }
+                    },
+                    Command::Ls => {/*No need to do anything*/}
+                }
+            },
+            InputLine::Entry(e) => {
+                match e {
+                    Entry::Dir(p) => {
+                        let mut children = &mut breadcrumbs.last_mut().unwrap().children;
+                        children.insert(p, FileNode{size : 0, children : HashMap::new()});
+
+                    },
+                    Entry::File(s,p) => {}
+                }
+            },
         }
     }
 }
